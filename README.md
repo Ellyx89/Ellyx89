@@ -27,9 +27,14 @@ The helper does:
 3. Fail with actionable message if neither is installed.
 
 ## One-command end-to-end validation (Docker Compose)
-Run schema + seed against a local PostgreSQL service with one command:
+Run schema + seed against local PostgreSQL:
 ```bash
 docker compose up --abort-on-container-exit --exit-code-from sql-validate sql-validate
+```
+
+Validate compose config (when Docker is installed):
+```bash
+docker compose config
 ```
 
 Optional cleanup:
