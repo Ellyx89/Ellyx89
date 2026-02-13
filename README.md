@@ -42,6 +42,20 @@ Optional cleanup:
 docker compose down -v
 ```
 
+
+## Compose validation without Docker
+If Docker is available, run full validation:
+```bash
+docker compose config
+```
+
+If Docker is **not** installed in your environment, run fallback structural checks:
+```bash
+./scripts/validate_compose.sh
+```
+
+This verifies critical compose structure (`services`, `postgres`, `sql-validate`, health dependency, `DATABASE_URL`, volumes).
+
 ## How to fix `psql: command not found`
 
 ### Ubuntu / Debian
