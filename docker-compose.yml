@@ -1,0 +1,40 @@
+name: kitchenops-pro-local
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kitchenops
+      POSTGRES_USER: kitchenops
+      POSTGRES_PASSWORD: kitchenops
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kitchenops -d kitchenops"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  sql-validate:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace:ro
+    environment:
+      DATABASE_URL: postgresql://kitchenops:kitchenops@postgres:5432/kitchenops
+    entrypoint:
+      - /bin/sh
+      - -lc
+    command:
+      - >-
+        psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql
+        && psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/seed.sql
+
+volumes:
+  pgdata:
