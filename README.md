@@ -24,7 +24,9 @@ DATABASE_URL="postgresql://user:pass@host:5432/dbname" ./scripts/validate_sql.sh
 The helper does:
 1. Use local `psql` if installed.
 2. Otherwise, use Docker `postgres:16-alpine` as a fallback client.
-3. Fail with actionable message if neither is installed.
+3. If both are missing, run static fallback checks on `db/schema.sql` and `db/seed.sql` (structure/pattern checks).
+
+> Static fallback mode is useful in restricted environments, but full SQL execution validation still requires `psql` or Docker.
 
 ## One-command end-to-end validation (Docker Compose)
 Run schema + seed against local PostgreSQL:

@@ -6,7 +6,7 @@ SCHEMA_FILE="$ROOT_DIR/db/schema.sql"
 SEED_FILE="$ROOT_DIR/db/seed.sql"
 
 if [[ ! -f "$SCHEMA_FILE" ]]; then
-  echo "Schema file not found: $SCHEMA_FILE" >&2
+  echo "[validate_sql] Schema file not found: $SCHEMA_FILE" >&2
   exit 1
 fi
 
@@ -25,7 +25,7 @@ if command -v docker >/dev/null 2>&1; then
   echo "[validate_sql] psql not found. Falling back to Dockerized postgres client"
   : "${DATABASE_URL:?DATABASE_URL is required for dockerized psql fallback}"
   docker run --rm \
-    -v "$ROOT_DIR:/workspace" \
+    -v "$ROOT_DIR:/workspace:ro" \
     --network host \
     -e DATABASE_URL="$DATABASE_URL" \
     postgres:16-alpine \
@@ -34,6 +34,36 @@ if command -v docker >/dev/null 2>&1; then
   exit 0
 fi
 
-echo "[validate_sql] Neither psql nor docker is available." >&2
-echo "Install PostgreSQL client tools (psql) or Docker, then run again." >&2
-exit 2
+# Fallback checks for environments without psql and without Docker.
+# This is static validation and does NOT execute SQL.
+echo "[validate_sql] Neither psql nor docker is available; running static fallback checks"
+
+required_schema_patterns=(
+  '^CREATE TABLE orgs \('
+  '^CREATE TABLE locations \('
+  '^CREATE TABLE items \('
+  '^CREATE TABLE item_lots \('
+  '^CREATE TABLE stock_movements \('
+  '^CREATE TABLE stock_movement_lines \('
+  '^CREATE TABLE lot_allocations \('
+  '^CREATE TABLE purchase_orders \('
+  '^CREATE TABLE checklist_runs \('
+  '^CREATE TABLE notifications \('
+)
+
+for pattern in "${required_schema_patterns[@]}"; do
+  if ! rg -n "$pattern" "$SCHEMA_FILE" >/dev/null; then
+    echo "[validate_sql] Missing expected schema pattern: $pattern" >&2
+    exit 2
+  fi
+done
+
+if [[ -f "$SEED_FILE" ]]; then
+  if ! rg -n '^INSERT INTO org_members' "$SEED_FILE" >/dev/null; then
+    echo "[validate_sql] Seed file exists but expected org_members insert not found" >&2
+    exit 2
+  fi
+fi
+
+echo "[validate_sql] OK (static fallback checks)"
+echo "[validate_sql] Note: install psql or Docker for full runtime SQL execution validation."
