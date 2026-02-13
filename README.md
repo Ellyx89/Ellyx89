@@ -8,6 +8,7 @@ Base project assets for a B2B kitchen operations platform with FEFO/FIFO invento
 - `i18n/en.json` and `i18n/el.json`: GR/EN translation baseline.
 - `docs/IMPLEMENTATION_PLAN.md`: implementation workflow and API suggestions.
 - `scripts/validate_sql.sh`: validates schema/seed using local `psql` or Docker fallback.
+- `docker-compose.yml`: local PostgreSQL + one-command SQL validation workflow.
 
 ## Quick start (database)
 ```bash
@@ -24,6 +25,17 @@ The helper does:
 1. Use local `psql` if installed.
 2. Otherwise, use Docker `postgres:16-alpine` as a fallback client.
 3. Fail with actionable message if neither is installed.
+
+## One-command end-to-end validation (Docker Compose)
+Run schema + seed against a local PostgreSQL service with one command:
+```bash
+docker compose up --abort-on-container-exit --exit-code-from sql-validate sql-validate
+```
+
+Optional cleanup:
+```bash
+docker compose down -v
+```
 
 ## How to fix `psql: command not found`
 
